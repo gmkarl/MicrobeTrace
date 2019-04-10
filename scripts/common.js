@@ -298,24 +298,23 @@ app.generateSeqs = function(idPrefix, count=20000, snps=100, seed=session.data.r
   seqs.push({id: idPrefix + '0', seq: seed});
 
   while(seqs.length < count){
-    // number codons to vary
-    const nCodons = Math.floor(Math.random() * 10) + 1;
-
-    // randomly select this many to check for existence
-    const randomCodonSet = sample(sampleCodons, nCodons).join('');
-
-    // try again if not present
-    if(seqs[seqs.length - 1].seq.indexOf(randomCodonSet) == -1)
-      continue;
-
     // sequence to mutate
-    const oldseed = seqs[Math.floor(Math.random() * seqs.length)].seq;
+    var seed = seqs[Math.floor(Math.random() * seqs.length)].seq;
+
+    // number codons to vary and actual codons to replace
+    var nCodons, randomCodonSet;
+
+    // select randomCodonSet until the result is found within the sequence
+    do{
+      nCodons = Math.floor(Math.random() * 10) + 1;
+      randomCodonSet = sample(sampleCodons, nCodons).join('');
+    }while(seed.indexOf(randomCodonSet) == -1);
 
     // select codons to replace randomCodonSet
     const replacementCodonSet = sample(sampleCodons, nCodons).join('');
 
     // replace codon set
-    var newseed = oldseed.replace(randomCodonSet, replacementCodonSet);
+    seed = seed.replace(randomCodonSet, replacementCodonSet);
 
     // add snp substitutions randomly across entire sequence
     // - randomly sample addedSNP
@@ -324,10 +323,10 @@ app.generateSeqs = function(idPrefix, count=20000, snps=100, seed=session.data.r
     for(var j = 0; j < addedSNPs; j ++){
       const randomSNP = sample(sampleSNPs, 1)[0];
       const locOfSNP = Math.floor(Math.random() * seed.length);
-      newseed = newseed.substr(0, locOfSNP) + randomSNP + newseed.substr(locOfSNP + 1);
+      seed = seed.substr(0, locOfSNP) + randomSNP + seed.substr(locOfSNP + 1);
     }
 
-    seqs.push({id: idPrefix + '' + seqs.length, seq: newseed});
+    seqs.push({id: idPrefix + '' + seqs.length, seq: seed});
   }
 
   return seqs;
